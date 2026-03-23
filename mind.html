@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindMap — Neural Thought Visualizer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #040408; color: #fff; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+  
+  canvas { position: fixed; top: 0; left: 0; z-index: 0; }
+  
+  /* Input overlay */
+  .input-overlay { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 8px; align-items: center; width: calc(100% - 48px); max-width: 600px; }
+  .thought-input { flex: 1; background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 14px 20px; color: #fff; font-size: 15px; outline: none; font-family: inherit; }
+  .thought-input::placeholder { color: #555; }
+  .thought-input:focus { border-color: rgba(139,92,246,0.5); }
+  .add-btn { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #3b82f6); border: none; color: #fff; font-size: 22px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+  .add-btn:hover { transform: scale(1.08); }
+  .add-btn:active { transform: scale(0.95); }
+  
+  /* Header */
+  .top-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(4,4,8,0.9) 0%, transparent 100%); }
+  .top-bar h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+  .top-bar h1 .accent { background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .top-bar .stats { font-size: 12px; color: #666; display: flex; gap: 16px; }
+  .top-bar .stats span { color: #8b5cf6; font-weight: 600; }
+  
+  /* Controls */
+  .controls { position: fixed; top: 60px; right: 16px; z-index: 10; display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.06); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); color: #888; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .ctrl-btn.active { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); color: #8b5cf6; }
+  
+  /* Tooltip */
+  .tooltip { position: fixed; z-index: 20; background: rgba(20,20,35,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 18px; max-width: 280px; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+  .tooltip.visible { opacity: 1; }
+  .tooltip .tt-label { font-size: 10px; color: #8b5cf6; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .tooltip .tt-text { font-size: 14px; margin-top: 4px; line-height: 1.4; }
+  .tooltip .tt-connections { font-size: 11px; color: #666; margin-top: 6px; }
+  .tooltip .tt-type { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-top: 6px; }
+  
+  /* Category selector */
+  .category-bar { position: fixed; top: 60px; left: 16px; z-index: 10; display: flex; flex-direction: column; gap: 6px; }
+  .cat-btn { padding: 6px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: #666; font-size: 11px; cursor: pointer; transition: all 0.2s; text-align: left; white-space: nowrap; }
+  .cat-btn:hover { background: rgba(255,255,255,0.08); }
+  .cat-btn.active { border-color: var(--cat-color); color: var(--cat-color); background: color-mix(in srgb, var(--cat-color) 10%, transparent); }
+  .cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+  /* Onboarding */
+  .onboard { position: fixed; inset: 0; z-index: 100; background: rgba(4,4,8,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .onboard.hidden { display: none; }
+  .onboard h1 { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+  .onboard h1 .accent { background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .onboard p { color: #888; font-size: 15px; max-width: 400px; line-height: 1.6; margin-bottom: 24px; }
+  .onboard .start-btn { background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: #fff; border: none; border-radius: 16px; padding: 16px 40px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
+  .onboard .start-btn:hover { transform: scale(1.03); }
+  .preset-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px; margin-bottom: 24px; }
+  .preset-pill { padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #999; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .preset-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .preset-pill.selected { background: rgba(139,92,246,0.2); border-color: #8b5cf6; color: #fff; }
+
+  /* Pulse animation */
+  @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="top-bar">
+  <h1>🧠 Mind<span class="accent">Map</span></h1>
+  <div class="stats">
+    <div>Neurons: <span id="neuronCount">0</span></div>
+    <div>Synapses: <span id="synapseCount">0</span></div>
+    <div>Clusters: <span id="clusterCount">0</span></div>
+  </div>
+</div>
+
+<div class="category-bar" id="categoryBar"></div>
+
+<div class="controls">
+  <div class="ctrl-btn" onclick="toggleFire()" title="Auto-fire neurons" id="fireBtn">⚡</div>
+  <div class="ctrl-btn" onclick="toggleLabels()" title="Show labels" id="labelBtn">Aa</div>
+  <div class="ctrl-btn" onclick="resetZoom()" title="Reset view">⊙</div>
+  <div class="ctrl-btn" onclick="exportMind()" title="Export">↗</div>
+  <div class="ctrl-btn" onclick="clearAll()" title="Clear all">✕</div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tt-label">Thought</div>
+  <div class="tt-text" id="ttText"></div>
+  <div class="tt-connections" id="ttConnections"></div>
+  <div class="tt-type" id="ttType"></div>
+</div>
+
+<div class="input-overlay">
+  <input type="text" class="thought-input" id="thoughtInput" placeholder="Drop a thought, belief, memory, goal, fear..." />
+  <button class="add-btn" onclick="addThought()">+</button>
+</div>
+
+<!-- Onboarding -->
+<div class="onboard" id="onboard">
+  <h1>🧠 Mind<span class="accent">Map</span></h1>
+  <p>Vectorize your mind. Drop thoughts, beliefs, goals, fears, and memories — watch your neural network form in real time.</p>
+  <p style="color: #666; font-size: 13px; margin-bottom: 16px;">Start with some seeds or jump in blank:</p>
+  <div class="preset-pills" id="presetPills"></div>
+  <button class="start-btn" onclick="startMapping()">Map My Mind →</button>
+</div>
+
+<script>
+// ─── Config ──────────────────────────────────────────
+const CATEGORIES = {
+  belief:  { color: '#8b5cf6', label: 'Beliefs', keywords: ['believe', 'think', 'feel like', 'am', "i'm", 'identity', 'confident', 'scared', 'worthy', 'enough', 'capable', 'smart', 'stuck', 'lost'] },
+  goal:    { color: '#3b82f6', label: 'Goals', keywords: ['want', 'goal', 'wish', 'dream', 'build', 'become', 'achieve', 'create', 'start', 'launch', 'make', 'earn', 'get'] },
+  fear:    { color: '#ef4444', label: 'Fears', keywords: ['fear', 'afraid', 'worry', 'anxious', 'scared', 'fail', 'lose', 'death', 'alone', 'reject', 'judge', 'embarrass'] },
+  memory:  { color: '#f59e0b', label: 'Memories', keywords: ['remember', 'when i', 'used to', 'back when', 'childhood', 'grew up', 'happened', 'that time', 'ago', 'was'] },
+  habit:   { color: '#22c55e', label: 'Habits', keywords: ['every day', 'routine', 'habit', 'always', 'usually', 'tend to', 'keep', 'gym', 'work', 'eat', 'sleep', 'wake'] },
+  insight: { color: '#06b6d4', label: 'Insights', keywords: ['realize', 'understand', 'learned', 'truth', 'actually', 'pattern', 'connection', 'means', 'because', 'therefore'] },
+  person:  { color: '#ec4899', label: 'People', keywords: ['mom', 'dad', 'friend', 'girlfriend', 'partner', 'brother', 'sister', 'family', 'boss', 'mentor'] },
+  value:   { color: '#f97316', label: 'Values', keywords: ['important', 'value', 'care about', 'matters', 'principle', 'loyalty', 'respect', 'freedom', 'love', 'truth', 'ambition'] }
+};
+
+const PRESETS = [
+  // Beliefs
+  { text: "I'm more ambitious than most people", cat: 'belief' },
+  { text: "I don't know what I'm doing", cat: 'belief' },
+  { text: "I can see what others can't", cat: 'belief' },
+  { text: "I feel stuck right now", cat: 'belief' },
+  { text: "I figure things out", cat: 'belief' },
+  // Goals
+  { text: "Build something that changes my life", cat: 'goal' },
+  { text: "Financial freedom by 25", cat: 'goal' },
+  { text: "Be in the best shape of my life", cat: 'goal' },
+  { text: "Feel confident and respected everywhere", cat: 'goal' },
+  { text: "Drive a convertible on a perfect day", cat: 'goal' },
+  // Fears
+  { text: "Wasting my potential", cat: 'fear' },
+  { text: "Being average", cat: 'fear' },
+  { text: "Running out of time", cat: 'fear' },
+  { text: "People finding out I'm winging it", cat: 'fear' },
+  // Memories
+  { text: "Moving twice as a kid, never fitting in", cat: 'memory' },
+  { text: "COVID isolation in high school", cat: 'memory' },
+  { text: "First time throwing a party and it worked", cat: 'memory' },
+  { text: "Getting my own place from hustling", cat: 'memory' },
+  // Habits
+  { text: "Gym almost every day", cat: 'habit' },
+  { text: "Instacart for survival income", cat: 'habit' },
+  { text: "Late nights thinking instead of sleeping", cat: 'habit' },
+  // Values
+  { text: "Loyalty is non-negotiable", cat: 'value' },
+  { text: "Ambition over comfort", cat: 'value' },
+  { text: "Independence matters more than money", cat: 'value' },
+  // People
+  { text: "Mom works at NIH, always supported me", cat: 'person' },
+  { text: "Sri — business partner, investor mentality", cat: 'person' },
+  { text: "Girlfriend who believes in me", cat: 'person' },
+  // Insights
+  { text: "The simulation loop: belief → action → result → belief", cat: 'insight' },
+  { text: "Consciousness is the substrate, not the byproduct", cat: 'insight' },
+  { text: "I'm not a body having experiences — I'm experience having a body", cat: 'insight' },
+];
+
+let selectedPresets = new Set();
+
+// ─── State ───────────────────────────────────────────
+let neurons = [];
+let synapses = [];
+let camera = { x: 0, y: 0, zoom: 1 };
+let dragging = false;
+let dragStart = { x: 0, y: 0 };
+let camStart = { x: 0, y: 0 };
+let hoveredNeuron = null;
+let autoFire = true;
+let showLabels = true;
+let activeCategory = null;
+let draggedNeuron = null;
+
+// ─── Canvas Setup ────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth * devicePixelRatio;
+  canvas.height = window.innerHeight * devicePixelRatio;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── Neuron Class ────────────────────────────────────
+class Neuron {
+  constructor(text, category, x, y) {
+    this.id = Math.random().toString(36).substr(2, 9);
+    this.text = text;
+    this.category = category;
+    this.color = CATEGORIES[category]?.color || '#8b5cf6';
+    this.x = x || window.innerWidth / 2 + (Math.random() - 0.5) * 400;
+    this.y = y || window.innerHeight / 2 + (Math.random() - 0.5) * 300;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.radius = 6 + Math.min(text.length / 8, 10);
+    this.firing = 0; // 0-1 firing animation
+    this.energy = 0.5 + Math.random() * 0.5;
+    this.words = text.toLowerCase().split(/\s+/);
+    this.connections = 0;
+    this.pinned = false;
+  }
+  
+  fire() {
+    this.firing = 1;
+    this.energy = Math.min(1, this.energy + 0.3);
+    // Propagate to connected neurons
+    setTimeout(() => {
+      synapses.filter(s => s.from === this.id || s.to === this.id).forEach(s => {
+        const targetId = s.from === this.id ? s.to : s.from;
+        const target = neurons.find(n => n.id === targetId);
+        if (target && Math.random() < s.strength * 0.6) {
+          setTimeout(() => target.fire(), 100 + Math.random() * 300);
+        }
+      });
+    }, 50);
+  }
+}
+
+// ─── Synapse ─────────────────────────────────────────
+class Synapse {
+  constructor(fromId, toId, strength, reason) {
+    this.from = fromId;
+    this.to = toId;
+    this.strength = strength; // 0-1
+    this.reason = reason;
+    this.pulse = 0;
+  }
+}
+
+// ─── Semantic Similarity (simple word overlap + category) ───
+function similarity(a, b) {
+  let score = 0;
+  const wordsA = new Set(a.words);
+  const wordsB = new Set(b.words);
+  
+  // Word overlap
+  const stopWords = new Set(['i', 'a', 'the', 'is', 'am', 'are', 'was', 'were', 'be', 'been', 'to', 'of', 'and', 'in', 'that', 'it', 'for', 'on', 'with', 'as', 'at', 'by', 'from', 'my', 'me', 'do', 'not', "don't", "i'm", 'but', 'or', 'an', 'this', 'so', 'if', 'about', 'just', 'like', 'have', 'has', 'had']);
+  
+  const meaningfulA = [...wordsA].filter(w => !stopWords.has(w) && w.length > 2);
+  const meaningfulB = [...wordsB].filter(w => !stopWords.has(w) && w.length > 2);
+  
+  let overlap = 0;
+  meaningfulA.forEach(w => {
+    if (meaningfulB.some(wb => wb === w || wb.includes(w) || w.includes(wb))) overlap++;
+  });
+  
+  if (meaningfulA.length > 0 && meaningfulB.length > 0) {
+    score += (overlap / Math.max(meaningfulA.length, meaningfulB.length)) * 0.6;
+  }
+  
+  // Same category bonus
+  if (a.category === b.category) score += 0.15;
+  
+  // Semantic relationship bonuses
+  const conceptPairs = [
+    [['fear', 'afraid', 'scared', 'worry'], ['goal', 'want', 'dream', 'achieve']],
+    [['belief', 'believe', 'think', 'feel'], ['habit', 'routine', 'always', 'every']],
+    [['memory', 'remember', 'past', 'childhood'], ['belief', 'believe', 'identity', 'am']],
+    [['stuck', 'lost', 'confused'], ['potential', 'capable', 'smart', 'ambitious']],
+    [['money', 'income', 'financial', 'earn'], ['freedom', 'independent', 'free']],
+    [['gym', 'shape', 'body', 'health'], ['confident', 'confidence', 'attractive']],
+    [['family', 'mom', 'dad', 'parent'], ['love', 'support', 'believe']],
+    [['build', 'create', 'startup', 'business'], ['ambition', 'ambitious', 'drive', 'hustle']],
+  ];
+  
+  conceptPairs.forEach(([setA, setB]) => {
+    const aHit = meaningfulA.some(w => setA.includes(w));
+    const bHit = meaningfulB.some(w => setB.includes(w));
+    const aHit2 = meaningfulA.some(w => setB.includes(w));
+    const bHit2 = meaningfulB.some(w => setA.includes(w));
+    if ((aHit && bHit) || (aHit2 && bHit2)) score += 0.2;
+  });
+  
+  return Math.min(1, score);
+}
+
+function getConnectionReason(a, b) {
+  if (a.category === b.category) return `Same domain: ${CATEGORIES[a.category].label}`;
+  const wordsA = new Set(a.words);
+  const wordsB = new Set(b.words);
+  const shared = [...wordsA].filter(w => wordsB.has(w) && w.length > 2);
+  if (shared.length > 0) return `Shared concept: "${shared[0]}"`;
+  return `${CATEGORIES[a.category].label} ↔ ${CATEGORIES[b.category].label}`;
+}
+
+// ─── Auto-categorize ─────────────────────────────────
+function categorize(text) {
+  const lower = text.toLowerCase();
+  let bestCat = 'insight';
+  let bestScore = 0;
+  
+  Object.entries(CATEGORIES).forEach(([cat, { keywords }]) => {
+    let score = 0;
+    keywords.forEach(kw => {
+      if (lower.includes(kw)) score += 1;
+    });
+    if (score > bestScore) {
+      bestScore = score;
+      bestCat = cat;
+    }
+  });
+  
+  return bestCat;
+}
+
+// ─── Add Thought ─────────────────────────────────────
+function addThought(text, category) {
+  if (!text) {
+    text = document.getElementById('thoughtInput').value.trim();
+    if (!text) return;
+    document.getElementById('thoughtInput').value = '';
+  }
+  
+  if (!category) category = categorize(text);
+  
+  const neuron = new Neuron(text, category);
+  neurons.push(neuron);
+  
+  // Find connections
+  neurons.forEach(existing => {
+    if (existing.id === neuron.id) return;
+    const sim = similarity(neuron, existing);
+    if (sim > 0.12) {
+      const synapse = new Synapse(neuron.id, existing.id, sim, getConnectionReason(neuron, existing));
+      synapses.push(synapse);
+      neuron.connections++;
+      existing.connections++;
+      existing.radius = 6 + Math.min(existing.text.length / 8, 10) + existing.connections * 1.5;
+    }
+  });
+  
+  neuron.radius = 6 + Math.min(text.length / 8, 10) + neuron.connections * 1.5;
+  neuron.fire();
+  
+  updateStats();
+  updateCategoryBar();
+}
+
+// ─── Physics ─────────────────────────────────────────
+function physics() {
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+  
+  neurons.forEach(n => {
+    if (n.pinned || n === draggedNeuron) return;
+    
+    // Gentle gravity toward center
+    n.vx += (centerX - n.x) * 0.00003;
+    n.vy += (centerY - n.y) * 0.00003;
+    
+    // Repulsion between neurons
+    neurons.forEach(other => {
+      if (other.id === n.id) return;
+      const dx = n.x - other.x;
+      const dy = n.y - other.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const minDist = (n.radius + other.radius) * 3;
+      
+      if (dist < minDist) {
+        const force = (minDist - dist) / dist * 0.02;
+        n.vx += dx * force;
+        n.vy += dy * force;
+      }
+    });
+    
+    // Attraction along synapses
+    synapses.forEach(s => {
+      let other = null;
+      if (s.from === n.id) other = neurons.find(nn => nn.id === s.to);
+      else if (s.to === n.id) other = neurons.find(nn => nn.id === s.from);
+      if (!other) return;
+      
+      const dx = other.x - n.x;
+      const dy = other.y - n.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const idealDist = 120 + (1 - s.strength) * 150;
+      
+      const force = (dist - idealDist) / dist * 0.003 * s.strength;
+      n.vx += dx * force;
+      n.vy += dy * force;
+    });
+    
+    // Damping
+    n.vx *= 0.92;
+    n.vy *= 0.92;
+    
+    n.x += n.vx;
+    n.y += n.vy;
+    
+    // Firing decay
+    if (n.firing > 0) n.firing *= 0.95;
+    if (n.firing < 0.01) n.firing = 0;
+    
+    // Energy decay
+    n.energy *= 0.9995;
+    n.energy = Math.max(0.3, n.energy);
+  });
+  
+  // Synapse pulse decay
+  synapses.forEach(s => {
+    if (s.pulse > 0) s.pulse *= 0.93;
+    if (s.pulse < 0.01) s.pulse = 0;
+  });
+}
+
+// ─── Auto-fire ───────────────────────────────────────
+function randomFire() {
+  if (!autoFire || neurons.length === 0) return;
+  const n = neurons[Math.floor(Math.random() * neurons.length)];
+  n.fire();
+  
+  // Pulse connected synapses
+  synapses.filter(s => s.from === n.id || s.to === n.id).forEach(s => {
+    s.pulse = 1;
+  });
+}
+setInterval(randomFire, 2000);
+
+// ─── Render ──────────────────────────────────────────
+function render() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(camera.x, camera.y);
+  ctx.scale(camera.zoom, camera.zoom);
+  
+  // Draw synapses
+  synapses.forEach(s => {
+    const from = neurons.find(n => n.id === s.from);
+    const to = neurons.find(n => n.id === s.to);
+    if (!from || !to) return;
+    
+    // Category filter
+    if (activeCategory && from.category !== activeCategory && to.category !== activeCategory) return;
+    
+    const alpha = s.strength * 0.3 + s.pulse * 0.5;
+    const isHovered = hoveredNeuron && (s.from === hoveredNeuron.id || s.to === hoveredNeuron.id);
+    
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    
+    if (isHovered) {
+      ctx.strokeStyle = `rgba(139, 92, 246, ${alpha + 0.3})`;
+      ctx.lineWidth = 2;
+    } else {
+      ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+      ctx.lineWidth = s.strength * 2;
+    }
+    ctx.stroke();
+    
+    // Pulse particle along synapse
+    if (s.pulse > 0.1) {
+      const t = (1 - s.pulse);
+      const px = from.x + (to.x - from.x) * t;
+      const py = from.y + (to.y - from.y) * t;
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(139, 92, 246, ${s.pulse})`;
+      ctx.fill();
+    }
+  });
+  
+  // Draw neurons
+  neurons.forEach(n => {
+    // Category filter
+    if (activeCategory && n.category !== activeCategory) {
+      // Draw dimmed
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,0.03)`;
+      ctx.fill();
+      return;
+    }
+    
+    const isHovered = hoveredNeuron && hoveredNeuron.id === n.id;
+    const r = n.radius + (isHovered ? 4 : 0);
+    
+    // Glow
+    if (n.firing > 0.05 || isHovered) {
+      const glowR = r * (2 + n.firing * 2);
+      const glow = ctx.createRadialGradient(n.x, n.y, r, n.x, n.y, glowR);
+      glow.addColorStop(0, n.color + Math.round((n.firing * 0.4 + (isHovered ? 0.2 : 0)) * 255).toString(16).padStart(2, '0'));
+      glow.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+    }
+    
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = n.color + '20';
+    ctx.fill();
+    ctx.strokeStyle = n.color + (isHovered ? 'cc' : '66');
+    ctx.lineWidth = isHovered ? 2.5 : 1.5;
+    ctx.stroke();
+    
+    // Inner core
+    const coreR = r * (0.4 + n.energy * 0.3 + n.firing * 0.3);
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, coreR, 0, Math.PI * 2);
+    ctx.fillStyle = n.color + (Math.round((0.6 + n.firing * 0.4) * 255)).toString(16).padStart(2, '0');
+    ctx.fill();
+    
+    // Label
+    if (showLabels && (camera.zoom > 0.5 || isHovered)) {
+      const maxLen = isHovered ? 50 : 24;
+      let label = n.text.length > maxLen ? n.text.substring(0, maxLen) + '...' : n.text;
+      ctx.fillStyle = `rgba(255,255,255,${isHovered ? 0.95 : 0.5})`;
+      ctx.font = `${isHovered ? '13' : '11'}px -apple-system, system-ui`;
+      ctx.textAlign = 'center';
+      ctx.fillText(label, n.x, n.y + r + 16);
+    }
+  });
+  
+  ctx.restore();
+  
+  physics();
+  requestAnimationFrame(render);
+}
+
+// ─── Interaction ─────────────────────────────────────
+function screenToWorld(sx, sy) {
+  return {
+    x: (sx - camera.x) / camera.zoom,
+    y: (sy - camera.y) / camera.zoom
+  };
+}
+
+canvas.addEventListener('mousedown', e => {
+  const world = screenToWorld(e.clientX, e.clientY);
+  const hit = neurons.find(n => {
+    const dx = n.x - world.x;
+    const dy = n.y - world.y;
+    return Math.sqrt(dx * dx + dy * dy) < n.radius + 10;
+  });
+  
+  if (hit) {
+    draggedNeuron = hit;
+    return;
+  }
+  
+  dragging = true;
+  dragStart = { x: e.clientX, y: e.clientY };
+  camStart = { x: camera.x, y: camera.y };
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (draggedNeuron) {
+    const world = screenToWorld(e.clientX, e.clientY);
+    draggedNeuron.x = world.x;
+    draggedNeuron.y = world.y;
+    draggedNeuron.vx = 0;
+    draggedNeuron.vy = 0;
+    return;
+  }
+  
+  if (dragging) {
+    camera.x = camStart.x + (e.clientX - dragStart.x);
+    camera.y = camStart.y + (e.clientY - dragStart.y);
+    return;
+  }
+  
+  // Hover detection
+  const world = screenToWorld(e.clientX, e.clientY);
+  const hit = neurons.find(n => {
+    if (activeCategory && n.category !== activeCategory) return false;
+    const dx = n.x - world.x;
+    const dy = n.y - world.y;
+    return Math.sqrt(dx * dx + dy * dy) < n.radius + 8;
+  });
+  
+  hoveredNeuron = hit || null;
+  
+  const tooltip = document.getElementById('tooltip');
+  if (hit) {
+    const connectedSynapses = synapses.filter(s => s.from === hit.id || s.to === hit.id);
+    const connectedNames = connectedSynapses.map(s => {
+      const otherId = s.from === hit.id ? s.to : s.from;
+      const other = neurons.find(n => n.id === otherId);
+      return other ? other.text.substring(0, 30) : '';
+    }).filter(Boolean);
+    
+    document.getElementById('ttText').textContent = hit.text;
+    document.getElementById('ttConnections').textContent = connectedNames.length > 0 
+      ? `Connected to: ${connectedNames.slice(0, 3).join(', ')}${connectedNames.length > 3 ? ` +${connectedNames.length - 3} more` : ''}`
+      : 'No connections yet';
+    const ttType = document.getElementById('ttType');
+    ttType.textContent = CATEGORIES[hit.category].label;
+    ttType.style.background = hit.color + '30';
+    ttType.style.color = hit.color;
+    
+    tooltip.style.left = Math.min(e.clientX + 16, window.innerWidth - 300) + 'px';
+    tooltip.style.top = Math.max(e.clientY - 80, 10) + 'px';
+    tooltip.classList.add('visible');
+    canvas.style.cursor = 'pointer';
+  } else {
+    tooltip.classList.remove('visible');
+    canvas.style.cursor = dragging ? 'grabbing' : 'default';
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  dragging = false;
+  draggedNeuron = null;
+});
+
+canvas.addEventListener('dblclick', e => {
+  const world = screenToWorld(e.clientX, e.clientY);
+  const hit = neurons.find(n => {
+    const dx = n.x - world.x;
+    const dy = n.y - world.y;
+    return Math.sqrt(dx * dx + dy * dy) < n.radius + 8;
+  });
+  if (hit) {
+    hit.fire();
+    synapses.filter(s => s.from === hit.id || s.to === hit.id).forEach(s => s.pulse = 1);
+  }
+});
+
+// Touch support
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const world = screenToWorld(touch.clientX, touch.clientY);
+  const hit = neurons.find(n => {
+    const dx = n.x - world.x;
+    const dy = n.y - world.y;
+    return Math.sqrt(dx * dx + dy * dy) < n.radius + 15;
+  });
+  
+  if (hit) {
+    draggedNeuron = hit;
+    hoveredNeuron = hit;
+  } else {
+    dragging = true;
+    dragStart = { x: touch.clientX, y: touch.clientY };
+    camStart = { x: camera.x, y: camera.y };
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  if (draggedNeuron) {
+    const world = screenToWorld(touch.clientX, touch.clientY);
+    draggedNeuron.x = world.x;
+    draggedNeuron.y = world.y;
+    draggedNeuron.vx = 0;
+    draggedNeuron.vy = 0;
+  } else if (dragging) {
+    camera.x = camStart.x + (touch.clientX - dragStart.x);
+    camera.y = camStart.y + (touch.clientY - dragStart.y);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+  dragging = false;
+  draggedNeuron = null;
+  hoveredNeuron = null;
+  document.getElementById('tooltip').classList.remove('visible');
+});
+
+// Zoom
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const zoomFactor = e.deltaY > 0 ? 0.92 : 1.08;
+  const oldZoom = camera.zoom;
+  camera.zoom = Math.max(0.2, Math.min(3, camera.zoom * zoomFactor));
+  
+  // Zoom toward cursor
+  camera.x = e.clientX - (e.clientX - camera.x) * (camera.zoom / oldZoom);
+  camera.y = e.clientY - (e.clientY - camera.y) * (camera.zoom / oldZoom);
+}, { passive: false });
+
+// Pinch zoom for mobile
+let lastPinchDist = null;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2 && lastPinchDist) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const scale = dist / lastPinchDist;
+    camera.zoom = Math.max(0.2, Math.min(3, camera.zoom * scale));
+    lastPinchDist = dist;
+    dragging = false;
+    draggedNeuron = null;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => { lastPinchDist = null; });
+
+// Keyboard
+document.getElementById('thoughtInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addThought(); }
+});
+
+// ─── Controls ────────────────────────────────────────
+function toggleFire() {
+  autoFire = !autoFire;
+  document.getElementById('fireBtn').classList.toggle('active', autoFire);
+}
+
+function toggleLabels() {
+  showLabels = !showLabels;
+  document.getElementById('labelBtn').classList.toggle('active', showLabels);
+}
+
+function resetZoom() {
+  camera = { x: 0, y: 0, zoom: 1 };
+}
+
+function clearAll() {
+  if (confirm('Clear all thoughts?')) {
+    neurons = [];
+    synapses = [];
+    updateStats();
+    updateCategoryBar();
+  }
+}
+
+function exportMind() {
+  const data = {
+    neurons: neurons.map(n => ({ text: n.text, category: n.category })),
+    exported: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mindmap-export.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Stats ───────────────────────────────────────────
+function updateStats() {
+  document.getElementById('neuronCount').textContent = neurons.length;
+  document.getElementById('synapseCount').textContent = synapses.length;
+  
+  // Count clusters (connected components)
+  const visited = new Set();
+  let clusters = 0;
+  neurons.forEach(n => {
+    if (visited.has(n.id)) return;
+    clusters++;
+    const queue = [n.id];
+    while (queue.length > 0) {
+      const curr = queue.pop();
+      if (visited.has(curr)) continue;
+      visited.add(curr);
+      synapses.filter(s => s.from === curr || s.to === curr).forEach(s => {
+        const other = s.from === curr ? s.to : s.from;
+        if (!visited.has(other)) queue.push(other);
+      });
+    }
+  });
+  document.getElementById('clusterCount').textContent = clusters;
+}
+
+function updateCategoryBar() {
+  const counts = {};
+  neurons.forEach(n => { counts[n.category] = (counts[n.category] || 0) + 1; });
+  
+  const bar = document.getElementById('categoryBar');
+  bar.innerHTML = Object.entries(CATEGORIES)
+    .filter(([cat]) => counts[cat])
+    .map(([cat, { color, label }]) => 
+      `<div class="cat-btn ${activeCategory === cat ? 'active' : ''}" style="--cat-color:${color}" onclick="filterCategory('${cat}')">
+        <span class="cat-dot" style="background:${color}"></span>${label} (${counts[cat]})
+      </div>`
+    ).join('') + (activeCategory ? `<div class="cat-btn" onclick="filterCategory(null)" style="color:#fff">Show All</div>` : '');
+}
+
+function filterCategory(cat) {
+  activeCategory = activeCategory === cat ? null : cat;
+  updateCategoryBar();
+}
+
+// ─── Onboarding ──────────────────────────────────────
+function initPresets() {
+  const container = document.getElementById('presetPills');
+  PRESETS.forEach((p, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'preset-pill';
+    pill.textContent = p.text;
+    pill.onclick = () => {
+      pill.classList.toggle('selected');
+      if (selectedPresets.has(i)) selectedPresets.delete(i);
+      else selectedPresets.add(i);
+    };
+    container.appendChild(pill);
+  });
+}
+
+function startMapping() {
+  document.getElementById('onboard').classList.add('hidden');
+  
+  // Add selected presets with stagger
+  const selected = [...selectedPresets].map(i => PRESETS[i]);
+  if (selected.length === 0) {
+    // Add a few defaults if nothing selected
+    const defaults = PRESETS.slice(0, 6);
+    defaults.forEach((p, i) => {
+      setTimeout(() => addThought(p.text, p.cat), i * 200);
+    });
+  } else {
+    selected.forEach((p, i) => {
+      setTimeout(() => addThought(p.text, p.cat), i * 200);
+    });
+  }
+}
+
+// ─── Init ────────────────────────────────────────────
+initPresets();
+document.getElementById('fireBtn').classList.add('active');
+document.getElementById('labelBtn').classList.add('active');
+render();
+</script>
+</body>
+</html>
