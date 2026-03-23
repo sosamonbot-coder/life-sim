@@ -6,7 +6,8 @@
 <title>MindMap — Neural Thought Visualizer</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #040408; color: #fff; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+  body { background: #040408; color: #fff; font-family: -apple-system, system-ui, sans-serif; height: 100vh; width: 100vw; }
+  body.mapping { overflow: hidden; }
   
   canvas { position: fixed; top: 0; left: 0; z-index: 0; }
   
@@ -48,12 +49,12 @@
   .cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
 
   /* Onboarding */
-  .onboard { position: fixed; inset: 0; z-index: 100; background: rgba(4,4,8,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  .onboard { position: fixed; inset: 0; z-index: 100; background: rgba(4,4,8,0.97); display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px; padding-top: 60px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .onboard.hidden { display: none; }
   .onboard h1 { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
   .onboard h1 .accent { background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .onboard p { color: #888; font-size: 15px; max-width: 400px; line-height: 1.6; margin-bottom: 24px; }
-  .onboard .start-btn { background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: #fff; border: none; border-radius: 16px; padding: 16px 40px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
+  .onboard .start-btn { background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: #fff; border: none; border-radius: 16px; padding: 16px 40px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.2s; margin-bottom: 60px; flex-shrink: 0; }
   .onboard .start-btn:hover { transform: scale(1.03); }
   .preset-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px; margin-bottom: 24px; }
   .preset-pill { padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #999; font-size: 13px; cursor: pointer; transition: all 0.2s; }
@@ -817,6 +818,7 @@ function initPresets() {
 
 function startMapping() {
   document.getElementById('onboard').classList.add('hidden');
+  document.body.classList.add('mapping');
   
   // Add selected presets with stagger
   const selected = [...selectedPresets].map(i => PRESETS[i]);
