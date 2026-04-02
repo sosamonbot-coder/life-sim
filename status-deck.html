@@ -181,62 +181,78 @@
     <div class="mesh-blob" style="background:radial-gradient(circle,rgba(175,82,222,0.2),transparent 70%);width:500px;height:500px;top:30%;right:-5%;animation-delay:-5s;animation-duration:18s;"></div>
   </div>
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
-    <!-- Orbital diagram — CSS-driven perfect circle positioning -->
+    <!-- Solar system orbital animation -->
     <style>
-      .orbit-container { position:relative;width:520px;height:520px;margin:0 auto 32px; }
-      .orbit-center { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#007aff,#5856d6,#af52de);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 60px rgba(0,122,255,0.3),0 0 100px rgba(88,86,214,0.12); }
-      .orbit-ring { position:absolute;top:50%;left:50%;width:420px;height:420px;transform:translate(-50%,-50%);border:1.5px solid rgba(0,0,0,0.06);border-radius:50%; }
-      .orbit-chip { position:absolute;top:50%;left:50%;width:100px;height:48px;margin:-24px 0 0 -50px;background:rgba(255,255,255,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(0,0,0,0.08);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,0.06);text-align:center; }
-      .orbit-chip .oc-name { font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.2; }
-      .orbit-chip .oc-role { font-size:9px;color:var(--text-tertiary);margin-top:1px; }
-      /* 10 chips evenly at 36° intervals, radius 210px */
-      .orbit-chip:nth-child(4){transform:translate(0px,-210px);}
-      .orbit-chip:nth-child(5){transform:translate(123px,-170px);}
-      .orbit-chip:nth-child(6){transform:translate(200px,-65px);}
-      .orbit-chip:nth-child(7){transform:translate(200px,65px);}
-      .orbit-chip:nth-child(8){transform:translate(123px,170px);}
-      .orbit-chip:nth-child(9){transform:translate(0px,210px);}
-      .orbit-chip:nth-child(10){transform:translate(-123px,170px);}
-      .orbit-chip:nth-child(11){transform:translate(-200px,65px);}
-      .orbit-chip:nth-child(12){transform:translate(-200px,-65px);}
-      .orbit-chip:nth-child(13){transform:translate(-123px,-170px);}
-      @media(max-width:600px){
-        .orbit-container{width:340px;height:340px;}
-        .orbit-ring{width:280px;height:280px;}
-        .orbit-chip{width:80px;height:40px;margin:-20px 0 0 -40px;border-radius:10px;}
-        .orbit-chip .oc-name{font-size:10px;}
-        .orbit-chip .oc-role{font-size:8px;}
-        .orbit-center{width:100px;height:100px;}
-        .orbit-center div:first-child{font-size:20px!important;}
-        .orbit-chip:nth-child(4){transform:translate(0px,-140px);}
-        .orbit-chip:nth-child(5){transform:translate(82px,-113px);}
-        .orbit-chip:nth-child(6){transform:translate(133px,-43px);}
-        .orbit-chip:nth-child(7){transform:translate(133px,43px);}
-        .orbit-chip:nth-child(8){transform:translate(82px,113px);}
-        .orbit-chip:nth-child(9){transform:translate(0px,140px);}
-        .orbit-chip:nth-child(10){transform:translate(-82px,113px);}
-        .orbit-chip:nth-child(11){transform:translate(-133px,43px);}
-        .orbit-chip:nth-child(12){transform:translate(-133px,-43px);}
-        .orbit-chip:nth-child(13){transform:translate(-82px,-113px);}
-      }
+      .solar{position:relative;width:600px;height:600px;margin:0 auto 24px;}
+      @media(max-width:650px){.solar{width:92vw;height:92vw;}}
+      /* Sun — Status */
+      .sun{position:absolute;top:50%;left:50%;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#6e8efb,#5856d6 40%,#3a1c71 100%);box-shadow:0 0 40px rgba(88,86,214,0.5),0 0 80px rgba(88,86,214,0.25),0 0 120px rgba(88,86,214,0.1);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+      .sun-name{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.02em;}
+      .sun-sub{font-size:8px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.12em;margin-top:2px;}
+      /* Orbit tracks */
+      .track{position:absolute;top:50%;left:50%;border:1px solid rgba(100,100,140,0.08);border-radius:50%;transform:translate(-50%,-50%);}
+      .track-1{width:240px;height:240px;}
+      .track-2{width:370px;height:370px;}
+      .track-3{width:510px;height:510px;}
+      /* Rotating wrappers */
+      .ring{position:absolute;top:50%;left:50%;width:0;height:0;}
+      .ring-1{animation:orbit 30s linear infinite;}
+      .ring-2{animation:orbit 45s linear infinite reverse;}
+      .ring-3{animation:orbit 60s linear infinite;}
+      @keyframes orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      /* Planets — counter-rotate to stay upright */
+      .planet{position:absolute;background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.9);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.08),inset 0 1px 0 rgba(255,255,255,0.9);text-align:center;}
+      .planet-sm{width:64px;height:64px;}
+      .planet-md{width:72px;height:72px;}
+      .planet-lg{width:78px;height:78px;}
+      .planet .p-name{font-size:9px;font-weight:700;color:#1d1d1f;line-height:1.15;}
+      .planet .p-role{font-size:7px;color:rgba(0,0,0,0.4);margin-top:1px;}
+      /* Counter-rotation */
+      .ring-1 .planet{animation:counter-orbit 30s linear infinite;}
+      .ring-2 .planet{animation:counter-orbit 45s linear infinite reverse;}
+      .ring-3 .planet{animation:counter-orbit 60s linear infinite;}
+      @keyframes counter-orbit{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+      /* Positions: offset from center of ring by orbit radius */
+      .ring-1 .p1{top:-32px;left:-32px;margin-top:-120px;}
+      .ring-1 .p2{top:-32px;left:-32px;margin-top:120px;}
+      .ring-1 .p3{top:-32px;left:-32px;margin-left:120px;}
+      .ring-2 .p4{top:-36px;left:-36px;margin-top:-185px;}
+      .ring-2 .p5{top:-36px;left:-36px;margin-left:185px;}
+      .ring-2 .p6{top:-36px;left:-36px;margin-top:160px;margin-left:-100px;}
+      .ring-2 .p7{top:-36px;left:-36px;margin-top:-80px;margin-left:-170px;}
+      .ring-3 .p8{top:-39px;left:-39px;margin-top:-255px;}
+      .ring-3 .p9{top:-39px;left:-39px;margin-left:240px;margin-top:80px;}
+      .ring-3 .p10{top:-39px;left:-39px;margin-left:-220px;margin-top:110px;}
     </style>
-    <div class="orbit-container reveal">
-      <div class="orbit-center">
-        <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.03em;">STATUS</div>
-        <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.8);margin-top:3px;letter-spacing:0.1em;">ALL-IN-ONE</div>
+    <div class="solar reveal">
+      <!-- Tracks -->
+      <div class="track track-1"></div>
+      <div class="track track-2"></div>
+      <div class="track track-3"></div>
+      <!-- Sun -->
+      <div class="sun">
+        <div class="sun-name">STATUS</div>
+        <div class="sun-sub">ALL-IN-ONE</div>
       </div>
-      <div class="orbit-ring"></div>
-      <div class="orbit-ring" style="width:422px;height:422px;border:0.5px dashed rgba(0,0,0,0.04);"></div>
-      <div class="orbit-chip"><span class="oc-name">Toast</span><span class="oc-role">Bar POS</span></div>
-      <div class="orbit-chip"><span class="oc-name">Aloha</span><span class="oc-role">Legacy POS</span></div>
-      <div class="orbit-chip"><span class="oc-name">LineLeap</span><span class="oc-role">Skip the Line</span></div>
-      <div class="orbit-chip"><span class="oc-name">Discotech</span><span class="oc-role">Guestlists</span></div>
-      <div class="orbit-chip"><span class="oc-name">Eventbrite</span><span class="oc-role">Events</span></div>
-      <div class="orbit-chip"><span class="oc-name">Mailchimp</span><span class="oc-role">Blasts</span></div>
-      <div class="orbit-chip"><span class="oc-name">SevenRooms</span><span class="oc-role">Reservations</span></div>
-      <div class="orbit-chip"><span class="oc-name">Posh</span><span class="oc-role">Ticketing</span></div>
-      <div class="orbit-chip"><span class="oc-name">TablelistPro</span><span class="oc-role">VIP & Tables</span></div>
-      <div class="orbit-chip"><span class="oc-name">UrVenue</span><span class="oc-role">VIP Booking</span></div>
+      <!-- Inner orbit — 3 planets -->
+      <div class="ring ring-1">
+        <div class="planet planet-sm p1"><span class="p-name">Toast</span><span class="p-role">Bar POS</span></div>
+        <div class="planet planet-sm p2"><span class="p-name">Posh</span><span class="p-role">Ticketing</span></div>
+        <div class="planet planet-sm p3"><span class="p-name">LineLeap</span><span class="p-role">Line Skip</span></div>
+      </div>
+      <!-- Middle orbit — 4 planets -->
+      <div class="ring ring-2">
+        <div class="planet planet-md p4"><span class="p-name">Aloha</span><span class="p-role">Legacy POS</span></div>
+        <div class="planet planet-md p5"><span class="p-name">Discotech</span><span class="p-role">Guestlists</span></div>
+        <div class="planet planet-md p6"><span class="p-name">Eventbrite</span><span class="p-role">Events</span></div>
+        <div class="planet planet-md p7"><span class="p-name">TablelistPro</span><span class="p-role">VIP & Tables</span></div>
+      </div>
+      <!-- Outer orbit — 3 planets -->
+      <div class="ring ring-3">
+        <div class="planet planet-lg p8"><span class="p-name">SevenRooms</span><span class="p-role">Reservations</span></div>
+        <div class="planet planet-lg p9"><span class="p-name">Mailchimp</span><span class="p-role">Blasts</span></div>
+        <div class="planet planet-lg p10"><span class="p-name">UrVenue</span><span class="p-role">VIP Booking</span></div>
+      </div>
     </div>
     <div class="slide-title reveal" style="font-size:clamp(28px,4vw,48px);line-height:1.12;">The all-in-one<br><span class="accent-text">nightlife platform.</span></div>
     <div class="slide-subtitle reveal" style="margin-top:16px;">Status connects your door, your bar, and your guest data — so you see exactly where every dollar comes from.</div>
