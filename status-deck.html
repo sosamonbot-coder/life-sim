@@ -181,54 +181,62 @@
     <div class="mesh-blob" style="background:radial-gradient(circle,rgba(175,82,222,0.2),transparent 70%);width:500px;height:500px;top:30%;right:-5%;animation-delay:-5s;animation-duration:18s;"></div>
   </div>
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
-    <!-- Orbital diagram -->
-    <div style="position:relative;width:min(90vw,640px);height:min(90vw,640px);margin-bottom:32px;">
-      <!-- Center: Status -->
-      <div class="reveal" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;text-align:center;">
-        <div style="width:160px;height:160px;border-radius:50%;background:linear-gradient(135deg,#007aff,#5856d6,#af52de);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 60px rgba(0,122,255,0.35),0 0 120px rgba(88,86,214,0.15);">
-          <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.03em;">STATUS</div>
-          <div style="font-size:10px;font-weight:500;color:rgba(255,255,255,0.8);margin-top:4px;letter-spacing:0.08em;">ALL-IN-ONE</div>
-        </div>
+    <!-- Orbital diagram — CSS-driven perfect circle positioning -->
+    <style>
+      .orbit-container { position:relative;width:520px;height:520px;margin:0 auto 32px; }
+      .orbit-center { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#007aff,#5856d6,#af52de);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 60px rgba(0,122,255,0.3),0 0 100px rgba(88,86,214,0.12); }
+      .orbit-ring { position:absolute;top:50%;left:50%;width:420px;height:420px;transform:translate(-50%,-50%);border:1.5px solid rgba(0,0,0,0.06);border-radius:50%; }
+      .orbit-chip { position:absolute;top:50%;left:50%;width:100px;height:48px;margin:-24px 0 0 -50px;background:rgba(255,255,255,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(0,0,0,0.08);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,0.06);text-align:center; }
+      .orbit-chip .oc-name { font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.2; }
+      .orbit-chip .oc-role { font-size:9px;color:var(--text-tertiary);margin-top:1px; }
+      /* 10 chips evenly at 36° intervals, radius 210px */
+      .orbit-chip:nth-child(4){transform:translate(0px,-210px);}
+      .orbit-chip:nth-child(5){transform:translate(123px,-170px);}
+      .orbit-chip:nth-child(6){transform:translate(200px,-65px);}
+      .orbit-chip:nth-child(7){transform:translate(200px,65px);}
+      .orbit-chip:nth-child(8){transform:translate(123px,170px);}
+      .orbit-chip:nth-child(9){transform:translate(0px,210px);}
+      .orbit-chip:nth-child(10){transform:translate(-123px,170px);}
+      .orbit-chip:nth-child(11){transform:translate(-200px,65px);}
+      .orbit-chip:nth-child(12){transform:translate(-200px,-65px);}
+      .orbit-chip:nth-child(13){transform:translate(-123px,-170px);}
+      @media(max-width:600px){
+        .orbit-container{width:340px;height:340px;}
+        .orbit-ring{width:280px;height:280px;}
+        .orbit-chip{width:80px;height:40px;margin:-20px 0 0 -40px;border-radius:10px;}
+        .orbit-chip .oc-name{font-size:10px;}
+        .orbit-chip .oc-role{font-size:8px;}
+        .orbit-center{width:100px;height:100px;}
+        .orbit-center div:first-child{font-size:20px!important;}
+        .orbit-chip:nth-child(4){transform:translate(0px,-140px);}
+        .orbit-chip:nth-child(5){transform:translate(82px,-113px);}
+        .orbit-chip:nth-child(6){transform:translate(133px,-43px);}
+        .orbit-chip:nth-child(7){transform:translate(133px,43px);}
+        .orbit-chip:nth-child(8){transform:translate(82px,113px);}
+        .orbit-chip:nth-child(9){transform:translate(0px,140px);}
+        .orbit-chip:nth-child(10){transform:translate(-82px,113px);}
+        .orbit-chip:nth-child(11){transform:translate(-133px,43px);}
+        .orbit-chip:nth-child(12){transform:translate(-133px,-43px);}
+        .orbit-chip:nth-child(13){transform:translate(-82px,-113px);}
+      }
+    </style>
+    <div class="orbit-container reveal">
+      <div class="orbit-center">
+        <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.03em;">STATUS</div>
+        <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.8);margin-top:3px;letter-spacing:0.1em;">ALL-IN-ONE</div>
       </div>
-      <!-- Orbit ring -->
-      <div style="position:absolute;top:50%;left:50%;width:85%;height:85%;transform:translate(-50%,-50%);border:1px solid rgba(0,0,0,0.06);border-radius:50%;"></div>
-      <!-- Fragment chips — positioned around the circle -->
-      <div class="reveal" style="position:absolute;top:3%;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Toast</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Bar POS</div>
-      </div>
-      <div class="reveal" style="position:absolute;top:18%;right:3%;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">LineLeap</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Skip the Line</div>
-      </div>
-      <div class="reveal" style="position:absolute;top:50%;right:0%;transform:translateY(-50%);background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Discotech</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Guestlists</div>
-      </div>
-      <div class="reveal" style="position:absolute;bottom:18%;right:3%;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Eventbrite</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Events</div>
-      </div>
-      <div class="reveal" style="position:absolute;bottom:3%;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Mailchimp</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Email Blasts</div>
-      </div>
-      <div class="reveal" style="position:absolute;bottom:18%;left:3%;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">SevenRooms</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Reservations</div>
-      </div>
-      <div class="reveal" style="position:absolute;top:50%;left:0%;transform:translateY(-50%);background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Posh</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Ticketing</div>
-      </div>
-      <div class="reveal" style="position:absolute;top:18%;left:3%;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">TablelistPro</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">VIP & Tables</div>
-      </div>
-      <div class="reveal" style="position:absolute;top:10%;left:50%;transform:translateX(60%);background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:12px;padding:10px 18px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">Aloha</div>
-        <div style="font-size:10px;color:var(--text-tertiary);">Legacy POS</div>
-      </div>
+      <div class="orbit-ring"></div>
+      <div class="orbit-ring" style="width:422px;height:422px;border:0.5px dashed rgba(0,0,0,0.04);"></div>
+      <div class="orbit-chip"><span class="oc-name">Toast</span><span class="oc-role">Bar POS</span></div>
+      <div class="orbit-chip"><span class="oc-name">Aloha</span><span class="oc-role">Legacy POS</span></div>
+      <div class="orbit-chip"><span class="oc-name">LineLeap</span><span class="oc-role">Skip the Line</span></div>
+      <div class="orbit-chip"><span class="oc-name">Discotech</span><span class="oc-role">Guestlists</span></div>
+      <div class="orbit-chip"><span class="oc-name">Eventbrite</span><span class="oc-role">Events</span></div>
+      <div class="orbit-chip"><span class="oc-name">Mailchimp</span><span class="oc-role">Blasts</span></div>
+      <div class="orbit-chip"><span class="oc-name">SevenRooms</span><span class="oc-role">Reservations</span></div>
+      <div class="orbit-chip"><span class="oc-name">Posh</span><span class="oc-role">Ticketing</span></div>
+      <div class="orbit-chip"><span class="oc-name">TablelistPro</span><span class="oc-role">VIP & Tables</span></div>
+      <div class="orbit-chip"><span class="oc-name">UrVenue</span><span class="oc-role">VIP Booking</span></div>
     </div>
     <div class="slide-title reveal" style="font-size:clamp(28px,4vw,48px);line-height:1.12;">The all-in-one<br><span class="accent-text">nightlife platform.</span></div>
     <div class="slide-subtitle reveal" style="margin-top:16px;">Status connects your door, your bar, and your guest data — so you see exactly where every dollar comes from.</div>
