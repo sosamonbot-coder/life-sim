@@ -27,8 +27,13 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;scroll-snap-type:y mandatory;}
-  body{background:#000 url('bg3.jpg') center/cover fixed;filter:none;color:var(--text);font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Helvetica Neue','Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
-  body::before{content:'';position:fixed;inset:0;background:url('bg3.jpg') center/cover fixed;z-index:-1;color:var(--text);font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Helvetica Neue','Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+  body{background:#050510;color:var(--text);font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Helvetica Neue','Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+  body::before{content:'';position:fixed;inset:0;z-index:-1;background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0,210,200,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 80% 20%, rgba(100,60,220,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 70% at 60% 80%, rgba(180,30,100,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 10% 80%, rgba(30,60,180,0.10) 0%, transparent 50%),
+    radial-gradient(ellipse 90% 80% at 50% 50%, rgba(5,5,16,1) 0%, #050510 100%);}
 
   /* ---- Slide ---- */
   .slide{min-height:100vh;display:flex;justify-content:center;align-items:center;padding:60px 32px;position:relative;scroll-snap-align:start;overflow:hidden;}
