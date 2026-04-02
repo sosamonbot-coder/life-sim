@@ -6,6 +6,10 @@
 <title>Status — Sales Deck</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  @font-face{font-family:'SF Pro Display';src:url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff2') format('woff2');font-weight:400;}
+  @font-face{font-family:'SF Pro Display';src:url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-medium-webfont.woff2') format('woff2');font-weight:500;}
+  @font-face{font-family:'SF Pro Display';src:url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-semibold-webfont.woff2') format('woff2');font-weight:600;}
+  @font-face{font-family:'SF Pro Display';src:url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-bold-webfont.woff2') format('woff2');font-weight:700;}
   :root {
     --glass: rgba(0,0,0,0.45);
     --glass-border: rgba(255,255,255,0.12);
@@ -23,7 +27,7 @@
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;scroll-snap-type:y mandatory;}
   body{background:#000 url('bg.jpg') center/cover fixed;filter:none;}
-  body::before{content:'';position:fixed;inset:0;background:url('bg.jpg') center/cover fixed;z-index:-1;color:var(--text);font-family:-apple-system,'SF Pro Display','Inter','Helvetica Neue',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+  body::before{content:'';position:fixed;inset:0;background:url('bg.jpg') center/cover fixed;z-index:-1;color:var(--text);font-family:'SF Pro Display',-apple-system,'SF Pro Text','Helvetica Neue','Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 
   /* ---- Slide ---- */
   .slide{min-height:100vh;display:flex;justify-content:center;align-items:center;padding:60px 32px;position:relative;scroll-snap-align:start;overflow:hidden;}
